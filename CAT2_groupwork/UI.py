@@ -66,6 +66,9 @@ class _StandaloneSystem:
     def most_urgent_bird(self):
         return None  # No health alert heap available in standalone mode
 
+    def all_health_alerts(self):
+        return []  # No health alert heap available in standalone mode
+
 
 def run_ui(system=None):
     """
@@ -82,7 +85,7 @@ def run_ui(system=None):
 4. Edit bird
 5. Delete bird
 6. Sort flock
-7. Most urgent health alert
+7. Health alerts (most urgent first)
 8. Exit
 """
 
@@ -147,13 +150,13 @@ def run_ui(system=None):
                       "this is a sorted copy for display only.")
 
             elif choice == "7":
-                urgent = system.most_urgent_bird()
-                print_header("MOST URGENT HEALTH ALERT")
-                if urgent is None:
+                alerts = system.all_health_alerts()
+                print_header("HEALTH ALERTS — MOST URGENT FIRST")
+                if not alerts:
                     print("No health alerts right now (no Sick/Critical birds,\n"
                           "or health alerts aren't available in this mode).")
                 else:
-                    print(urgent)
+                    print_flock_table(alerts)
 
             elif choice == "8":
                 print("\nGoodbye!")

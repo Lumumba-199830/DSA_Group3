@@ -1,3 +1,18 @@
+# =====================================================================
+# MODULE: Health Alert System (Min-Heap Priority Queue)
+# DELIVERABLE: Insert, extract-min, peek operations
+# =====================================================================
+#
+# NOTE: This module operates on Bird objects from backend.py — it does
+# NOT define its own record class. Priority is computed with a small
+# helper function instead of being stored on the Bird itself, so we
+# never have to modify the shared Bird class for this one module's need.
+#
+# Priority order (lower number = more urgent = comes out of heap first):
+#   Critical -> 1
+#   Sick     -> 2
+#   Healthy  -> excluded entirely (not inserted, not alerted on)
+
 from backend import Bird
 
 
@@ -47,6 +62,19 @@ class HealthAlertMinHeap:
             return None
         return self.heap[0]
 
+    def get_all_sorted(self):
+        """
+        Returns EVERY bird currently in the heap, ordered from most
+        urgent (Critical) to least urgent (Sick), WITHOUT removing
+        anything from the heap or changing its internal structure.
+
+        This does not use extract_min() repeatedly, since that would
+        empty the actual heap. Instead it sorts a separate COPY of the
+        heap's contents, so the real heap stays intact for future
+        insert()/extract_min()/peek() calls.
+        """
+        return sorted(self.heap, key=lambda bird: _priority(bird))
+
     def _bubble_up(self, index):
         parent_index = (index - 1) // 2
 
@@ -92,6 +120,10 @@ if __name__ == "__main__":
 
     print("Most urgent (peek):")
     print(heap.peek())
+
+    print("\nAll alerts, most urgent first (get_all_sorted):")
+    for b in heap.get_all_sorted():
+        print(b)
 
     print("\nExtracting in priority order:")
     while True:

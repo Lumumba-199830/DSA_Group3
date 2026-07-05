@@ -1,33 +1,3 @@
-"""
-Poultry Farm Management System — main.py (INTEGRATION FILE)
-----------------------------------------------------------------
-This file ties every teammate's module into one working system.
-
-HOW IT WORKS:
-  For each teammate's module, this file FIRST tries to import their
-  REAL file. If that import fails (file missing, wrong name, not
-  finished yet, contains an error), it automatically falls back to a
-  STUB placeholder so the program still runs end-to-end.
-
-  A message prints at startup telling you exactly which parts are
-  REAL and which are still STUBS — so you always know the true state
-  of the project before a demo or presentation.
-
-FILES THIS EXPECTS TO FIND IN THE SAME FOLDER:
-  backend.py         -> your file: Bird, FlockRegistry
-  SystemSearch.py     -> Search System teammate: HashTable class
-                          (methods: insert(bird), search(tag_id), delete(tag_id))
-  sorting_module.py   -> Sorting teammate: sort_flock(flock, criteria)
-  min_heap.py         -> Health Alert teammate: HealthAlertMinHeap class
-                          (methods: insert(bird), extract_min(), peek())
-
-IMPORTANT SHARED RULE FOR THE WHOLE GROUP:
-  Only ONE Bird class should exist in the entire project — the one in
-  backend.py. Every other file must IMPORT it, never redefine it.
-  Field names to use everywhere: tag_id, breed, age_weeks, weight_kg,
-  egg_count, health_status.
-"""
-
 # ---------------------------------------------------------------------
 # 1. YOUR MODULE — REQUIRED (the program cannot run without this)
 # ---------------------------------------------------------------------
@@ -128,6 +98,9 @@ class StubHealthAlertHeap:
             return None
         return min(self._items, key=lambda b: self._SEVERITY.get(b.health_status, 3))
 
+    def get_all_sorted(self):
+        return sorted(self._items, key=lambda b: self._SEVERITY.get(b.health_status, 3))
+
 
 # ---------------------------------------------------------------------
 # 4. INTEGRATION LAYER — the "glue" that connects every module
@@ -185,6 +158,9 @@ class PoultryFarmSystem:
     # ---- HEALTH ALERTS ----------------------------------------------------
     def most_urgent_bird(self):
         return self.health_alerts.peek()
+
+    def all_health_alerts(self):
+        return self.health_alerts.get_all_sorted()
 
 
 # ---------------------------------------------------------------------
