@@ -5,6 +5,8 @@ from backend import (
     BirdNotFoundError,
 )
 
+from SortingModule import sort_flock
+
 
 def print_header(title: str):
     print("\n" + "=" * 60)
@@ -45,14 +47,15 @@ def run_ui():
 3. Search bird by Tag ID
 4. Edit bird
 5. Delete bird
-6. Exit
+6. Sort flock
+7. Exit
 """
 
     print_header("POULTRY FARM MANAGEMENT SYSTEM")
 
     while True:
         print(menu)
-        choice = input("Select an option (1-6): ").strip()
+        choice = input("Select an option (1-7): ").strip()
 
         try:
             if choice == "1":
@@ -99,11 +102,20 @@ def run_ui():
                 print(f"\n✔ Removed: {removed}")
 
             elif choice == "6":
+                print("\nSort by: weight_kg / age_weeks / egg_count")
+                criteria = input("Enter attribute to sort by: ").strip()
+                sorted_birds = sort_flock(registry.get_all_birds(), criteria)
+                print_header(f"FLOCK SORTED BY {criteria.upper()}")
+                print_flock_table(sorted_birds)
+                print("\nNote: original registry order is unchanged — "
+                      "this is a sorted copy for display only.")
+
+            elif choice == "7":
                 print("\nGoodbye!")
                 break
 
             else:
-                print("Invalid option, please choose 1-6.")
+                print("Invalid option, please choose 1-7.")
 
         except (DuplicateTagIDError, BirdNotFoundError, ValueError,
                 AttributeError) as e:
