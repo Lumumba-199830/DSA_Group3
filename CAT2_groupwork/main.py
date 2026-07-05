@@ -1,0 +1,181 @@
+# ---------------------------------------------------------------------
+# 1. YOUR MODULE — REQUIRED (the program cannot run without this)
+# ---------------------------------------------------------------------
+
+import os
+import sys
+
+# Ensure sibling modules in the same directory can be imported when main.py
+# is executed from outside its folder.
+sys.path.insert(0, os.path.dirname(__file__))
+
+from backend import (
+    FlockRegistry,
+    Bird,
+    DuplicateTagIDError,
+    BirdNotFoundError,
+)
+
+
+# ---------------------------------------------------------------------
+# 2. TEAMMATES' MODULES — OPTIONAL (fall back to stubs if not ready)
+# ---------------------------------------------------------------------
+
+# ---- Search System (Hash Table) --------------------------------------
+try:
+    from SystemSearch import HashTable as RealHashTable
+    HASH_TABLE_IS_REAL = True
+except Exception as e:
+    HASH_TABLE_IS_REAL = False
+    _hash_table_import_error = e
+
+
+# ---- Sorting Module (Merge Sort + Quick Sort) ------------------------
+try:
+    from sorting_module import sort_flock as real_sort_flock
+    SORTING_IS_REAL = True
+except Exception as e:
+    SORTING_IS_REAL = False
+    _sorting_import_error = e
+
+
+# ---------------------------------------------------------------------
+# 3. STUB FALLBACKS — used only when a real module isn't available yet
+# ---------------------------------------------------------------------
+
+class StubHashTable:
+    """Fallback used only if hash_table.py is missing or broken."""
+
+    def __init__(self):
+        self._table = {}
+
+    def insert(self, bird):
+        self._table[bird.tag_id] = bird
+
+    def search(self, tag_id):
+        return self._table.get(tag_id)
+
+    def delete(self, tag_id):
+        return self._table.pop(tag_id, None) is not None
+
+
+class StubSorting:
+    """Fallback used only if sorting_module.py is missing or broken."""
+
+    ATTRIBUTE_MAP = {
+        "weight_kg": "weight_kg",
+        "age_weeks": "age_weeks",
+        "egg_count": "egg_count",
+    }
+
+    def sort_flock(self, flock, criteria):
+        key = self.ATTRIBUTE_MAP.get(criteria, criteria)
+        return sorted(flock, key=lambda bird: getattr(bird, key))
+
+
+# ---------------------------------------------------------------------
+# 4. INTEGRATION LAYER — the "glue" that connects every module
+# ---------------------------------------------------------------------
+
+class PoultryFarmSystem:
+    """
+    Owns ONE FlockRegistry and keeps every other module in sync with it.
+    This is the object the whole team's UI and demos should use.
+    """
+
+    def __init__(self):
+        self.registry = FlockRegistry()
+        self.hash_table = RealHashTable() if HASH_TABLE_IS_REAL else StubHashTable()
+
+    # ---- CREATE -----------------------------------------------------
+    def add_bird(self, bird: Bird) -> None:
+        self.registry.add_bird(bird)          # array (source of truth)
+        self.hash_table.insert(bird)          # keep hash table in sync
+
+    # ---- READ (fast path via hash table) -----------------------------
+    def search_bird(self, tag_id: str):
+        bird = self.hash_table.search(tag_id)
+        if bird is not None:
+            return bird
+        # Fall back to the registry's own linear search if the hash
+        # table doesn't have it (keeps the system correct even if the
+        # two ever drift out of sync)
+        return self.registry.find_bird(tag_id)
+
+    # ---- UPDATE -------------------------------------------------------
+    def edit_bird(self, tag_id: str, **fields) -> Bird:
+        updated = self.registry.edit_bird(tag_id, **fields)
+        # Hash table's insert() rejects duplicates, so remove + re-insert
+        self.hash_table.delete(tag_id)
+        self.hash_table.insert(updated)
+        return updated
+
+    # ---- DELETE ---------------------------------------------------------
+    def delete_bird(self, tag_id: str) -> Bird:
+        removed = self.registry.delete_bird(tag_id)
+        self.hash_table.delete(tag_id)
+        return removed
+
+    # ---- SORT (delegates to the sorting module or its stub) -------------
+    def sorted_flock(self, criteria: str):
+        flock = self.registry.get_all_birds()  # always sort a COPY
+        if SORTING_IS_REAL:
+            return real_sort_flock(flock, criteria)
+        return StubSorting().sort_flock(flock, criteria)
+
+
+# ---------------------------------------------------------------------
+# 5. STARTUP REPORT — shows which modules are real vs stubbed
+# ---------------------------------------------------------------------
+
+def print_integration_status():
+    print("=" * 60)
+    print("POULTRY FARM MANAGEMENT SYSTEM — MODULE STATUS".center(60))
+    print("=" * 60)
+    print(f"  Flock Registry (backend.py) ..... LOADED (required)")
+    print(f"  Hash Table ....................... "
+          f"{'REAL MODULE' if HASH_TABLE_IS_REAL else 'STUB (hash_table.py not found/broken)'}")
+    if not HASH_TABLE_IS_REAL:
+        print(f"      reason: {_hash_table_import_error}")
+    print(f"  Sorting Module ................... "
+          f"{'REAL MODULE' if SORTING_IS_REAL else 'STUB (sorting_module.py not found/broken)'}")
+    if not SORTING_IS_REAL:
+        print(f"      reason: {_sorting_import_error}")
+    print("=" * 60)
+
+
+# ---------------------------------------------------------------------
+# 6. DEMO — proves the whole pipeline works end-to-end
+# ---------------------------------------------------------------------
+
+def demo():
+    print_integration_status()
+    system = PoultryFarmSystem()
+
+    system.add_bird(Bird("PF-001", "Broiler", 6, 2.1, 0, "Healthy"))
+    system.add_bird(Bird("PF-002", "Layer", 10, 1.8, 120, "Sick"))
+    system.add_bird(Bird("PF-003", "Kienyeji", 4, 1.2, 10, "Critical"))
+
+    print("\n-- All birds (registry) --")
+    for b in system.registry.get_all_birds():
+        print(b)
+
+    print("\n-- Search PF-002 --")
+    print(system.search_bird("PF-002"))
+
+    print("\n-- Sorted by weight_kg --")
+    for b in system.sorted_flock("weight_kg"):
+        print(b)
+
+    system.edit_bird("PF-001", health_status="Critical")
+    print("\n-- PF-001 updated to Critical --")
+    print(system.search_bird("PF-001"))
+
+    system.delete_bird("PF-003")
+    print("\n-- After deleting PF-003 --")
+    for b in system.registry.get_all_birds():
+        print(b)
+
+
+if __name__ == "__main__":
+    demo()
