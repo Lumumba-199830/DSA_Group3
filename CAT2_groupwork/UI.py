@@ -1,35 +1,3 @@
-"""
-Poultry Farm Management System — UI (ui.py)
------------------------------------------------
-Owned by: Flock Registry & UI module
-
-This is the interactive menu that lets you actually type in commands
-to add, view, search, edit, and delete birds. It imports Bird and
-FlockRegistry from the backend file and never redefines them here.
-
-RUN THIS FILE (not flock_registry_backend.py) to get the CRUD menu:
-    python ui.py
-"""
-
-"""
-Poultry Farm Management System — UI (ui.py)
------------------------------------------------
-Owned by: Flock Registry & UI module
-
-This is the interactive menu that lets you actually type in commands
-to add, view, search, edit, and delete birds, and sort the flock.
-
-run_ui() can work in two modes:
-
-  1. STANDALONE — run this file directly (`python ui.py`). It creates
-     its own simple registry + sorting, with no hash table.
-
-  2. INTEGRATED — main.py imports run_ui() and calls it with a
-     PoultryFarmSystem object (registry + hash table + sorting all
-     wired together). This is the mode you want for your actual demo,
-     since it uses the real hash table for searching.
-"""
-
 from backend import (
     FlockRegistry,
     Bird,
@@ -95,6 +63,9 @@ class _StandaloneSystem:
     def sorted_flock(self, criteria):
         return sort_flock(self.registry.get_all_birds(), criteria)
 
+    def most_urgent_bird(self):
+        return None  # No health alert heap available in standalone mode
+
 
 def run_ui(system=None):
     """
@@ -111,14 +82,15 @@ def run_ui(system=None):
 4. Edit bird
 5. Delete bird
 6. Sort flock
-7. Exit
+7. Most urgent health alert
+8. Exit
 """
 
     print_header("POULTRY FARM MANAGEMENT SYSTEM")
 
     while True:
         print(menu)
-        choice = input("Select an option (1-7): ").strip()
+        choice = input("Select an option (1-8): ").strip()
 
         try:
             if choice == "1":
@@ -175,11 +147,20 @@ def run_ui(system=None):
                       "this is a sorted copy for display only.")
 
             elif choice == "7":
+                urgent = system.most_urgent_bird()
+                print_header("MOST URGENT HEALTH ALERT")
+                if urgent is None:
+                    print("No health alerts right now (no Sick/Critical birds,\n"
+                          "or health alerts aren't available in this mode).")
+                else:
+                    print(urgent)
+
+            elif choice == "8":
                 print("\nGoodbye!")
                 break
 
             else:
-                print("Invalid option, please choose 1-7.")
+                print("Invalid option, please choose 1-8.")
 
         except (DuplicateTagIDError, BirdNotFoundError, ValueError,
                 AttributeError) as e:
