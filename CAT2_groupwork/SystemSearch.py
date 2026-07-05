@@ -1,25 +1,4 @@
-# Defines a class called Bird to represent a bird in the poultry farm
-class Bird:
-
-    # Constructor
-    def __init__(self, tag_id, breed, age, weight, egg_count, health_status):
-        self.tag_id = tag_id
-        self.breed = breed
-        self.age = age
-        self.weight = weight
-        self.egg_count = egg_count
-        self.health_status = health_status
-
-    # Displays bird information
-    def __str__(self):
-        return (
-            f"Tag ID: {self.tag_id}\n"
-            f"Breed: {self.breed}\n"
-            f"Age: {self.age} weeks\n"
-            f"Weight: {self.weight} kg\n"
-            f"Egg Count: {self.egg_count}\n"
-            f"Health Status: {self.health_status}"
-        )
+from backend import Bird
 
 
 # Hash Table Class
@@ -85,81 +64,85 @@ class HashTable:
         return False
 
 
+# =====================================================================
+# STANDALONE MENU — only runs if you execute THIS file directly
+# (python SystemSearch.py). When main.py imports HashTable from this
+# file, this whole block is skipped, so it won't hijack the program.
+# =====================================================================
 
-# START OF MENU SYSTEM
+if __name__ == "__main__":
 
+    hash_table = HashTable()
 
-hash_table = HashTable()
+    while True:
 
-while True:
+        print("\n===== POULTRY FARM MANAGEMENT SYSTEM =====")
+        print("1. Add Bird")
+        print("2. Search Bird")
+        print("3. Delete Bird")
+        print("4. Exit")
 
-    print("\n===== POULTRY FARM MANAGEMENT SYSTEM =====")
-    print("1. Add Bird")
-    print("2. Search Bird")
-    print("3. Delete Bird")
-    print("4. Exit")
+        choice = input("Enter your choice: ")
 
-    choice = input("Enter your choice: ")
+        # ADD BIRD
+        if choice == "1":
 
-    # ADD BIRD
-    if choice == "1":
+            tag_id = input("Enter Tag ID: ")
+            breed = input("Enter Breed: ")
+            age = int(input("Enter Age (weeks): "))
+            weight = float(input("Enter Weight (kg): "))
+            egg_count = int(input("Enter Egg Count: "))
+            health_status = input("Enter Health Status: ")
 
-        tag_id = input("Enter Tag ID: ")
-        breed = input("Enter Breed: ")
-        age = int(input("Enter Age (weeks): "))
-        weight = float(input("Enter Weight (kg): "))
-        egg_count = int(input("Enter Egg Count: "))
-        health_status = input("Enter Health Status: ")
+            bird = Bird(
+                tag_id,
+                breed,
+                age,
+                weight,
+                egg_count,
+                health_status
+            )
 
-        bird = Bird(
-            tag_id,
-            breed,
-            age,
-            weight,
-            egg_count,
-            health_status
-        )
+            hash_table.insert(bird)
 
-        hash_table.insert(bird)
+            print("Bird added successfully!")
 
-        print("Bird added successfully!")
+        # SEARCH BIRD
+        elif choice == "2":
 
-    # SEARCH BIRD
-    elif choice == "2":
+            tag_id = input("Enter Tag ID to search: ")
 
-        tag_id = input("Enter Tag ID to search: ")
+            result = hash_table.search(tag_id)
 
-        result = hash_table.search(tag_id)
+            if result:
 
-        if result:
+                print("\nBird Found")
+                print(result)
 
-            print("\nBird Found")
-            print(result)
+            else:
 
+                print("Bird not found.")
+
+        # DELETE BIRD
+        elif choice == "3":
+
+            tag_id = input("Enter Tag ID to delete: ")
+
+            if hash_table.delete(tag_id):
+
+                print("Bird deleted successfully!")
+
+            else:
+
+                print("Bird not found.")
+
+        # EXIT SYSTEM
+        elif choice == "4":
+
+            print("Exiting system...")
+            break
+
+        # INVALID OPTION
         else:
 
-            print("Bird not found.")
-
-    # DELETE BIRD
-    elif choice == "3":
-
-        tag_id = input("Enter Tag ID to delete: ")
-
-        if hash_table.delete(tag_id):
-
-            print("Bird deleted successfully!")
-
-        else:
-
-            print("Bird not found.")
-
-    # EXIT SYSTEM
-    elif choice == "4":
-
-        print("Exiting system...")
-        break
-
-    # INVALID OPTION
-    else:
-
-        print("Invalid choice. Please try again.")
+            print("Invalid choice. Please try again.")
