@@ -28,7 +28,7 @@ def _merge(left, right, key):
     i = j = 0
     
     while i < len(left) and j < len(right):
-        if left[i][key] <= right[j][key]:
+        if getattr(left[i], key) <= getattr(right[j], key):
             sorted_list.append(left[i])
             i += 1
         else:
@@ -41,7 +41,7 @@ def _merge(left, right, key):
 
 
 # 2. QUICK SORT (Used for Fast Market Sorting: Weight)
-def quick_sort_poultry(flock, key="weight"):
+def quick_sort_poultry(flock, key="weight_kg"):
     """
     Sorts the flock by weight using the Quick Sort algorithm.
     Sorts quickly with an average time complexity of O(n log n).
@@ -53,10 +53,10 @@ def quick_sort_poultry(flock, key="weight"):
     
     # Using the last element as the pivot as outlined in the project proposal
     pivot_bird = flock_copy[-1]
-    pivot_weight = pivot_bird[key]
+    pivot_weight = getattr(pivot_bird, key)
     
-    left_side = [bird for bird in flock_copy[:-1] if bird[key] <= pivot_weight]
-    right_side = [bird for bird in flock_copy[:-1] if bird[key] > pivot_weight]
+    left_side = [bird for bird in flock_copy[:-1] if getattr(bird, key) <= pivot_weight]
+    right_side = [bird for bird in flock_copy[:-1] if getattr(bird, key) > pivot_weight]
     
     return quick_sort_poultry(left_side, key) + [pivot_bird] + quick_sort_poultry(right_side, key)
 
@@ -65,13 +65,14 @@ def quick_sort_poultry(flock, key="weight"):
 def sort_flock(flock, criteria):
     """
     The main driver function that your team's UI module will call.
-    Accepts criteria: 'weight', 'age', or 'egg_count'
+    Accepts criteria: 'weight_kg', 'age_weeks', or 'egg_count'
+    (these must match the actual Bird field names in backend.py)
     """
-    if criteria == "weight":
+    if criteria == "weight_kg":
         print(f"[Sorting Module] Executing Quick Sort on attribute: {criteria}")
-        return quick_sort_poultry(flock, key="weight")
+        return quick_sort_poultry(flock, key="weight_kg")
     
-    elif criteria in ["age", "egg_count"]:
+    elif criteria in ["age_weeks", "egg_count"]:
         print(f"[Sorting Module] Executing Merge Sort on attribute: {criteria}")
         return merge_sort_poultry(flock, key=criteria)
     
