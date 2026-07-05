@@ -1,3 +1,35 @@
+"""
+Poultry Farm Management System — main.py (INTEGRATION FILE)
+----------------------------------------------------------------
+This file ties every teammate's module into one working system.
+
+HOW IT WORKS:
+  For each teammate's module, this file FIRST tries to import their
+  REAL file. If that import fails (file missing, wrong name, not
+  finished yet, contains an error), it automatically falls back to a
+  STUB placeholder so the program still runs end-to-end.
+
+  A message prints at startup telling you exactly which parts are
+  REAL and which are still STUBS — so you always know the true state
+  of the project before a demo or presentation.
+
+FILES THIS EXPECTS TO FIND IN THE SAME FOLDER:
+  backend.py         -> your file: Bird, FlockRegistry
+  SystemSearch.py     -> Search System teammate: HashTable class
+                          (methods: insert(bird), search(tag_id), delete(tag_id))
+  sorting_module.py   -> Sorting teammate: sort_flock(flock, criteria)
+
+NOTE: The Health Alert System (min-heap) module has been removed from
+this integration file since nobody on the team is currently building
+it. If someone picks it up later, this file can be extended again.
+
+IMPORTANT SHARED RULE FOR THE WHOLE GROUP:
+  Only ONE Bird class should exist in the entire project — the one in
+  backend.py. Every other file must IMPORT it, never redefine it.
+  Field names to use everywhere: tag_id, breed, age_weeks, weight_kg,
+  egg_count, health_status.
+"""
+
 # ---------------------------------------------------------------------
 # 1. YOUR MODULE — REQUIRED (the program cannot run without this)
 # ---------------------------------------------------------------------
@@ -142,7 +174,6 @@ def print_integration_status():
 # ---------------------------------------------------------------------
 
 def demo():
-    print_integration_status()
     system = PoultryFarmSystem()
 
     system.add_bird(Bird("PF-001", "Broiler", 6, 2.1, 0, "Healthy"))
@@ -171,4 +202,14 @@ def demo():
 
 
 if __name__ == "__main__":
-    demo()
+    print_integration_status()
+    print("\n1. Run demo (automatic test)")
+    print("2. Run interactive menu (add/search/sort birds yourself)")
+    choice = input("\nChoose 1 or 2: ").strip()
+
+    if choice == "2":
+        from UI import run_ui
+        system = PoultryFarmSystem()
+        run_ui(system)
+    else:
+        demo()
