@@ -2,13 +2,6 @@
 # 1. YOUR MODULE — REQUIRED (the program cannot run without this)
 # ---------------------------------------------------------------------
 
-import os
-import sys
-
-# Ensure sibling modules in the same directory can be imported when main.py
-# is executed from outside its folder.
-sys.path.insert(0, os.path.dirname(__file__))
-
 from backend import (
     FlockRegistry,
     Bird,
@@ -32,7 +25,7 @@ except Exception as e:
 
 # ---- Sorting Module (Merge Sort + Quick Sort) ------------------------
 try:
-    from sorting_module import sort_flock as real_sort_flock
+    from SortingModule import sort_flock as real_sort_flock
     SORTING_IS_REAL = True
 except Exception as e:
     SORTING_IS_REAL = False
