@@ -1,18 +1,3 @@
-# =====================================================================
-# MODULE: Health Alert System (Min-Heap Priority Queue)
-# DELIVERABLE: Insert, extract-min, peek operations
-# =====================================================================
-#
-# NOTE: This module operates on Bird objects from backend.py — it does
-# NOT define its own record class. Priority is computed with a small
-# helper function instead of being stored on the Bird itself, so we
-# never have to modify the shared Bird class for this one module's need.
-#
-# Priority order (lower number = more urgent = comes out of heap first):
-#   Critical -> 1
-#   Sick     -> 2
-#   Healthy  -> excluded entirely (not inserted, not alerted on)
-
 from backend import Bird
 
 

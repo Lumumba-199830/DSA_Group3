@@ -18,10 +18,8 @@ FILES THIS EXPECTS TO FIND IN THE SAME FOLDER:
   SystemSearch.py     -> Search System teammate: HashTable class
                           (methods: insert(bird), search(tag_id), delete(tag_id))
   sorting_module.py   -> Sorting teammate: sort_flock(flock, criteria)
-
-NOTE: The Health Alert System (min-heap) module has been removed from
-this integration file since nobody on the team is currently building
-it. If someone picks it up later, this file can be extended again.
+  min_heap.py         -> Health Alert teammate: HealthAlertMinHeap class
+                          (methods: insert(bird), extract_min(), peek())
 
 IMPORTANT SHARED RULE FOR THE WHOLE GROUP:
   Only ONE Bird class should exist in the entire project — the one in
@@ -64,6 +62,15 @@ except Exception as e:
     _sorting_import_error = e
 
 
+# ---- Health Alert System (Min-Heap) ----------------------------------
+try:
+    from HealthAlertMinHeap import HealthAlertMinHeap as RealHealthAlertHeap
+    MIN_HEAP_IS_REAL = True
+except Exception as e:
+    MIN_HEAP_IS_REAL = False
+    _min_heap_import_error = e
+
+
 # ---------------------------------------------------------------------
 # 3. STUB FALLBACKS — used only when a real module isn't available yet
 # ---------------------------------------------------------------------
@@ -98,6 +105,30 @@ class StubSorting:
         return sorted(flock, key=lambda bird: getattr(bird, key))
 
 
+class StubHealthAlertHeap:
+    """Fallback used only if min_heap.py is missing or broken."""
+
+    _SEVERITY = {"Critical": 0, "Sick": 1, "Healthy": 2}
+
+    def __init__(self):
+        self._items = []
+
+    def insert(self, bird):
+        if bird.health_status in ("Sick", "Critical"):
+            self._items.append(bird)
+
+    def extract_min(self):
+        if not self._items:
+            return None
+        self._items.sort(key=lambda b: self._SEVERITY.get(b.health_status, 3))
+        return self._items.pop(0)
+
+    def peek(self):
+        if not self._items:
+            return None
+        return min(self._items, key=lambda b: self._SEVERITY.get(b.health_status, 3))
+
+
 # ---------------------------------------------------------------------
 # 4. INTEGRATION LAYER — the "glue" that connects every module
 # ---------------------------------------------------------------------
@@ -111,11 +142,13 @@ class PoultryFarmSystem:
     def __init__(self):
         self.registry = FlockRegistry()
         self.hash_table = RealHashTable() if HASH_TABLE_IS_REAL else StubHashTable()
+        self.health_alerts = RealHealthAlertHeap() if MIN_HEAP_IS_REAL else StubHealthAlertHeap()
 
     # ---- CREATE -----------------------------------------------------
     def add_bird(self, bird: Bird) -> None:
         self.registry.add_bird(bird)          # array (source of truth)
         self.hash_table.insert(bird)          # keep hash table in sync
+        self.health_alerts.insert(bird)       # flag for health alerts if Sick/Critical
 
     # ---- READ (fast path via hash table) -----------------------------
     def search_bird(self, tag_id: str):
@@ -133,6 +166,7 @@ class PoultryFarmSystem:
         # Hash table's insert() rejects duplicates, so remove + re-insert
         self.hash_table.delete(tag_id)
         self.hash_table.insert(updated)
+        self.health_alerts.insert(updated)
         return updated
 
     # ---- DELETE ---------------------------------------------------------
@@ -147,6 +181,10 @@ class PoultryFarmSystem:
         if SORTING_IS_REAL:
             return real_sort_flock(flock, criteria)
         return StubSorting().sort_flock(flock, criteria)
+
+    # ---- HEALTH ALERTS ----------------------------------------------------
+    def most_urgent_bird(self):
+        return self.health_alerts.peek()
 
 
 # ---------------------------------------------------------------------
@@ -166,6 +204,10 @@ def print_integration_status():
           f"{'REAL MODULE' if SORTING_IS_REAL else 'STUB (sorting_module.py not found/broken)'}")
     if not SORTING_IS_REAL:
         print(f"      reason: {_sorting_import_error}")
+    print(f"  Health Alert Heap ................. "
+          f"{'REAL MODULE' if MIN_HEAP_IS_REAL else 'STUB (min_heap.py not found/broken)'}")
+    if not MIN_HEAP_IS_REAL:
+        print(f"      reason: {_min_heap_import_error}")
     print("=" * 60)
 
 
@@ -191,9 +233,12 @@ def demo():
     for b in system.sorted_flock("weight_kg"):
         print(b)
 
+    print("\n-- Most urgent health alert --")
+    print(system.most_urgent_bird())
+
     system.edit_bird("PF-001", health_status="Critical")
-    print("\n-- PF-001 updated to Critical --")
-    print(system.search_bird("PF-001"))
+    print("\n-- Most urgent after PF-001 turns Critical --")
+    print(system.most_urgent_bird())
 
     system.delete_bird("PF-003")
     print("\n-- After deleting PF-003 --")
