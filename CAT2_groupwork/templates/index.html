@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flock Ledger — Poultry Farm Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="board">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="board__header">
+    <div class="brand">
+      <span class="brand__mark">⟡</span>
+      <div class="brand__text">
+        <h1>Flock Ledger</h1>
+        <p>Poultry Farm Management System</p>
+      </div>
+    </div>
+    <div class="header__stamp" id="clock-stamp"></div>
+  </header>
+
+  <!-- ===================== STAT CARDS ===================== -->
+  <section class="stats" aria-label="Flock overview">
+    <div class="stat-card" data-stat="total">
+      <span class="stat-card__label">Total birds</span>
+      <span class="stat-card__value" id="stat-total">0</span>
+    </div>
+    <div class="stat-card stat-card--healthy" data-stat="healthy">
+      <span class="stat-card__label">Healthy</span>
+      <span class="stat-card__value" id="stat-healthy">0</span>
+    </div>
+    <div class="stat-card stat-card--sick" data-stat="sick">
+      <span class="stat-card__label">Sick</span>
+      <span class="stat-card__value" id="stat-sick">0</span>
+    </div>
+    <div class="stat-card stat-card--critical" data-stat="critical">
+      <span class="stat-card__label">Critical</span>
+      <span class="stat-card__value" id="stat-critical">0</span>
+    </div>
+    <div class="stat-card" data-stat="eggs">
+      <span class="stat-card__label">Eggs logged</span>
+      <span class="stat-card__value" id="stat-eggs">0</span>
+    </div>
+  </section>
+
+  <div class="board__body">
+
+    <!-- ===================== MAIN COLUMN ===================== -->
+    <main class="main-col">
+
+      <!-- Tabs -->
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button class="tab is-active" data-tab="registry" role="tab" aria-selected="true">Registry</button>
+        <button class="tab" data-tab="add" role="tab" aria-selected="false">Add Bird</button>
+        <button class="tab" data-tab="search" role="tab" aria-selected="false">Search Bird</button>
+        <button class="tab" data-tab="sort" role="tab" aria-selected="false">Sort Flock</button>
+      </nav>
+
+      <!-- REGISTRY PANEL -->
+      <section class="panel is-active" data-panel="registry">
+        <div class="panel__toolbar">
+          <div class="search-field">
+            <input type="text" id="search-input" placeholder="Search by Tag ID (e.g. PF-001)" autocomplete="off">
+            <button id="search-btn" class="btn btn--ghost">Find</button>
+            <button id="search-clear" class="btn btn--text" hidden>Clear</button>
+          </div>
+          <button id="refresh-btn" class="btn btn--text" title="Reload registry">↻ Refresh</button>
+        </div>
+
+        <div class="ledger-wrap">
+          <table class="ledger" id="registry-table">
+            <thead>
+              <tr>
+                <th>Tag ID</th>
+                <th>Breed</th>
+                <th>Age (wks)</th>
+                <th>Weight (kg)</th>
+                <th>Eggs</th>
+                <th>Health</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="registry-tbody">
+              <!-- rows injected by app.js -->
+            </tbody>
+          </table>
+          <p class="empty-state" id="registry-empty" hidden>No birds recorded yet — add your first bird in the <strong>Add Bird</strong> tab.</p>
+        </div>
+      </section>
+
+      <!-- ADD BIRD PANEL -->
+      <section class="panel" data-panel="add">
+        <form class="index-card" id="add-form" novalidate>
+          <h2>New flock entry</h2>
+          <p class="index-card__hint">Fill out one card per bird. Tag ID must be unique.</p>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Tag ID</span>
+              <input type="text" name="tag_id" placeholder="PF-004" required>
+            </label>
+            <label class="field">
+              <span>Breed</span>
+              <input type="text" name="breed" placeholder="Broiler / Layer / Kienyeji" required>
+            </label>
+            <label class="field">
+              <span>Age (weeks)</span>
+              <input type="number" name="age_weeks" min="0" step="1" required>
+            </label>
+            <label class="field">
+              <span>Weight (kg)</span>
+              <input type="number" name="weight_kg" min="0" step="0.01" required>
+            </label>
+            <label class="field">
+              <span>Egg count</span>
+              <input type="number" name="egg_count" min="0" step="1" required>
+            </label>
+            <label class="field">
+              <span>Health status</span>
+              <select name="health_status">
+                <option value="Healthy">Healthy</option>
+                <option value="Sick">Sick</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="index-card__actions">
+            <button type="submit" class="btn btn--primary">Add bird to registry</button>
+            <span class="form-msg" id="add-msg"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- SEARCH PANEL -->
+      <section class="panel" data-panel="search">
+        <div class="index-card" style="max-width:640px;">
+          <h2>Search the flock</h2>
+          <p class="index-card__hint">
+            Look up one bird by Tag ID using the hash table
+            (<code>SystemSearch.py</code>) — O(1) average-case lookup.
+          </p>
+
+          <div class="field-grid" style="grid-template-columns: 1fr;">
+            <label class="field">
+              <span>Tag ID</span>
+              <input type="text" id="search2-input" placeholder="PF-001" autocomplete="off">
+            </label>
+          </div>
+
+          <div class="index-card__actions">
+            <button type="button" id="search2-btn" class="btn btn--primary">Search</button>
+            <span class="form-msg" id="search2-msg"></span>
+          </div>
+        </div>
+
+        <div class="ledger-wrap" style="margin-top:18px;">
+          <table class="ledger" id="search2-table">
+            <thead>
+              <tr>
+                <th>Tag ID</th>
+                <th>Breed</th>
+                <th>Age (wks)</th>
+                <th>Weight (kg)</th>
+                <th>Eggs</th>
+                <th>Health</th>
+              </tr>
+            </thead>
+            <tbody id="search2-tbody"></tbody>
+          </table>
+          <p class="empty-state" id="search2-empty">Search results will appear here.</p>
+        </div>
+      </section>
+
+      <!-- SORT PANEL -->
+      <section class="panel" data-panel="sort">
+        <div class="panel__toolbar">
+          <div class="sort-field">
+            <label for="sort-select">Sort flock by</label>
+            <select id="sort-select">
+              <option value="weight_kg">Weight (kg) — quick sort</option>
+              <option value="age_weeks">Age (weeks) — merge sort</option>
+              <option value="egg_count">Egg count — merge sort</option>
+            </select>
+            <button id="sort-btn" class="btn btn--ghost">Sort</button>
+          </div>
+          <p class="panel__note">This produces a sorted copy for viewing — the master registry order is never changed.</p>
+        </div>
+        <div class="ledger-wrap">
+          <table class="ledger" id="sort-table">
+            <thead>
+              <tr>
+                <th>Tag ID</th>
+                <th>Breed</th>
+                <th>Age (wks)</th>
+                <th>Weight (kg)</th>
+                <th>Eggs</th>
+                <th>Health</th>
+              </tr>
+            </thead>
+            <tbody id="sort-tbody"></tbody>
+          </table>
+          <p class="empty-state" id="sort-empty">Choose a criterion and press Sort.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ===================== ALERT RAIL (signature element) ===================== -->
+    <aside class="alert-rail" aria-label="Health alerts">
+      <h2 class="alert-rail__title">Health Alert Board</h2>
+      <p class="alert-rail__sub">Min-heap triage — most urgent case surfaces first.</p>
+
+      <div class="urgent-slot" id="urgent-slot">
+        <div class="urgent-slot__empty" id="urgent-empty">No active alerts. Flock is clear.</div>
+      </div>
+
+      <div class="alert-list" id="alert-list"></div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-backdrop" id="edit-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+    <h2 id="edit-title">Edit bird</h2>
+    <form id="edit-form">
+      <input type="hidden" name="tag_id">
+      <div class="field-grid">
+        <label class="field">
+          <span>Breed</span>
+          <input type="text" name="breed">
+        </label>
+        <label class="field">
+          <span>Age (weeks)</span>
+          <input type="number" name="age_weeks" min="0" step="1">
+        </label>
+        <label class="field">
+          <span>Weight (kg)</span>
+          <input type="number" name="weight_kg" min="0" step="0.01">
+        </label>
+        <label class="field">
+          <span>Egg count</span>
+          <input type="number" name="egg_count" min="0" step="1">
+        </label>
+        <label class="field">
+          <span>Health status</span>
+          <select name="health_status">
+            <option value="Healthy">Healthy</option>
+            <option value="Sick">Sick</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </label>
+      </div>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--text" id="edit-cancel">Cancel</button>
+        <button type="submit" class="btn btn--primary">Save changes</button>
+      </div>
+      <span class="form-msg" id="edit-msg"></span>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" hidden></div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
